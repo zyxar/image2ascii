@@ -1,4 +1,6 @@
-jp2a.go
-=======
+#Image to ASCII
 
-go port of jp2a
+
+##inspired by jp2a
+
+
