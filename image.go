@@ -3,14 +3,17 @@ package main
 import (
 	"fmt"
 	"image"
-	"image/jpeg"
 	"io"
 	"os"
-	// "golang.org/x/image/bmp"
-	// "golang.org/x/image/tiff"
-	// "golang.org/x/image/webp"
-	// "image/gif"
-	// "image/png"
+
+	_ "golang.org/x/image/bmp"
+	_ "golang.org/x/image/tiff"
+	_ "golang.org/x/image/vp8l"
+	_ "golang.org/x/image/webp"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
+
 	"github.com/nfnt/resize"
 )
 
@@ -25,8 +28,8 @@ type Image struct {
 }
 
 func Decode(r io.Reader) (i *Image, err error) {
-	im, err := jpeg.Decode(r)
-	if err != nil {
+	var im image.Image
+	if im, _, err = image.Decode(r); err != nil {
 		return
 	}
 	width := termWidth(os.Stdout.Fd())
