@@ -1,4 +1,4 @@
-package main
+package image
 
 const (
 	keyEscape                    = 27

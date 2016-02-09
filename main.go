@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+
+	. "github.com/zyxar/image2ascii/image"
 )
 
 var (
