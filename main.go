@@ -7,6 +7,8 @@ import (
 )
 
 var (
+	width  = flag.Int("w", 0, "set image width")
+	height = flag.Int("h", 0, "set image height")
 	color  = flag.Bool("c", false, "enable colour mode")
 	flipx  = flag.Bool("x", false, "enable flip-x mode")
 	flipy  = flag.Bool("y", false, "enable flip-y mode")
@@ -26,15 +28,19 @@ func main() {
 		return
 	}
 	defer r.Close()
-	i, err := Decode(r)
+	conf := Config{
+		Width:  *width,
+		Height: *height,
+		Color:  *color,
+		Invert: *invert,
+		Flipx:  *flipx,
+		Flipy:  *flipy}
+	i, err := Decode(r, conf)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		return
 	}
-	i.color = *color
-	i.invert = *invert
-	i.flipy = *flipy
-	i.flipx = *flipx
+
 	if _, err = i.WriteTo(os.Stdout); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 	}

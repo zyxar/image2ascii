@@ -18,47 +18,69 @@ import (
 )
 
 type Image struct {
-	img    image.Image
-	width  int
-	height int
-	color  bool
-	invert bool
-	flipx  bool
-	flipy  bool
+	image  image.Image
+	config Config
 }
 
-func Decode(r io.Reader) (i *Image, err error) {
+type Config struct {
+	Width  int
+	Height int
+	Color  bool
+	Invert bool
+	Flipx  bool
+	Flipy  bool
+}
+
+func Decode(r io.Reader, c ...Config) (i *Image, err error) {
 	var im image.Image
 	if im, _, err = image.Decode(r); err != nil {
 		return
 	}
-	width := termWidth(os.Stdout.Fd())
-	height := round(0.5 * float64(width) * float64(im.Bounds().Dy()) / float64(im.Bounds().Dx()))
-	img := resize.Resize(uint(width), uint(height), im, resize.Lanczos3)
-	i = &Image{img: img, width: width, height: height}
+	var conf Config
+	if c != nil {
+		conf = c[0]
+	} else {
+		conf = Config{
+			Color:  false,
+			Invert: false,
+			Flipx:  false,
+			Flipy:  false}
+	}
+
+	if conf.Width <= 0 && conf.Height <= 0 {
+		conf.Width = termWidth(os.Stdout.Fd())
+		conf.Height = round(0.5 * float64(conf.Width) * float64(im.Bounds().Dy()) / float64(im.Bounds().Dx()))
+	} else if conf.Height <= 0 {
+		conf.Height = round(0.5 * float64(conf.Width) * float64(im.Bounds().Dy()) / float64(im.Bounds().Dx()))
+	} else if conf.Width <= 0 {
+		conf.Width = round(2 * float64(conf.Height) * float64(im.Bounds().Dx()) / float64(im.Bounds().Dy()))
+	}
+
+	img := resize.Resize(uint(conf.Width), uint(conf.Height), im, resize.Lanczos3)
+	i = &Image{img, conf}
 	return
 }
 
 func (i Image) WriteTo(w io.Writer) (n int64, err error) {
-	ly := i.height
-	lx := i.width
+	ly := i.config.Height
+	lx := i.config.Width
 	m := 0
 	for y := 0; y < ly; y++ {
 		for x := 0; x < lx; x++ {
 			posX := x
 			posY := y
-			if i.flipx {
+			if i.config.Flipx {
 				posX = lx - 1 - x
 			}
-			if i.flipy {
+			if i.config.Flipy {
 				posY = ly - 1 - y
 			}
-			r, g, b, _ := i.img.At(posX, posY).RGBA()
+			r, g, b, _ := i.image.At(posX, posY).RGBA()
 			v := round(float64(r+g+b) * float64(ascii_palette_length) / 65535 / 3)
-			if i.invert {
+			if i.config.Invert {
 				v = ascii_palette_length - v
 			}
-			if i.color {
+			if i.config.Color {
 				vr := float64(r) / 65535
 				vg := float64(g) / 65535
 				vb := float64(b) / 65535
@@ -105,7 +127,7 @@ func (i Image) WriteTo(w io.Writer) (n int64, err error) {
 				return
 			}
 			n += int64(m)
-			if i.color {
+			if i.config.Color {
 				m, err = fmt.Fprintf(w, "%s", colorReset)
 				if err != nil {
 					return
