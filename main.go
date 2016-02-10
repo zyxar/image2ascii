@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	. "github.com/zyxar/image2ascii/image"
+	. "github.com/zyxar/image2ascii/ascii"
 )
 
 var (

@@ -1,8 +1,8 @@
 # Image to ASCII
 [![GoDoc][1]][2]
 
-[1]: https://godoc.org/github.com/zyxar/image2ascii?status.svg
-[2]: https://godoc.org/github.com/zyxar/image2ascii
+[1]: https://godoc.org/github.com/zyxar/image2ascii/ascii?status.svg
+[2]: https://godoc.org/github.com/zyxar/image2ascii/ascii
 
 inspired by jp2a
 
