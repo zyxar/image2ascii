@@ -31,11 +31,16 @@ type Config struct {
 	Flipy  bool
 }
 
-func Decode(r io.Reader, c ...Config) (i *Image, err error) {
-	var im image.Image
-	if im, _, err = image.Decode(r); err != nil {
-		return
+func Encode(w io.Writer, m image.Image, c ...Config) error {
+	img, err := decode(m, c...)
+	if err != nil {
+		return err
 	}
+	_, err = img.WriteTo(w)
+	return err
+}
+
+func decode(m image.Image, c ...Config) (i *Image, err error) {
 	var conf Config
 	if c != nil {
 		conf = c[0]
@@ -49,15 +54,24 @@ func Decode(r io.Reader, c ...Config) (i *Image, err error) {
 
 	if conf.Width <= 0 && conf.Height <= 0 {
 		conf.Width = termWidth(os.Stdout.Fd())
-		conf.Height = round(0.5 * float64(conf.Width) * float64(im.Bounds().Dy()) / float64(im.Bounds().Dx()))
+		conf.Height = round(0.5 * float64(conf.Width) * float64(m.Bounds().Dy()) / float64(m.Bounds().Dx()))
 	} else if conf.Height <= 0 {
-		conf.Height = round(0.5 * float64(conf.Width) * float64(im.Bounds().Dy()) / float64(im.Bounds().Dx()))
+		conf.Height = round(0.5 * float64(conf.Width) * float64(m.Bounds().Dy()) / float64(m.Bounds().Dx()))
 	} else if conf.Width <= 0 {
-		conf.Width = round(2 * float64(conf.Height) * float64(im.Bounds().Dx()) / float64(im.Bounds().Dy()))
+		conf.Width = round(2 * float64(conf.Height) * float64(m.Bounds().Dx()) / float64(m.Bounds().Dy()))
 	}
 
-	img := resize.Resize(uint(conf.Width), uint(conf.Height), im, resize.Lanczos3)
+	img := resize.Resize(uint(conf.Width), uint(conf.Height), m, resize.Lanczos3)
 	i = &Image{img, conf}
+	return
+}
+
+func Decode(r io.Reader, c ...Config) (i *Image, err error) {
+	var im image.Image
+	if im, _, err = image.Decode(r); err != nil {
+		return
+	}
+	i, err = decode(im, c...)
 	return
 }
 
