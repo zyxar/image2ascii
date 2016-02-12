@@ -15,6 +15,7 @@ import (
 	_ "image/png"
 
 	"github.com/nfnt/resize"
+	"github.com/zyxar/goico"
 )
 
 type Image struct {
@@ -29,6 +30,10 @@ type Config struct {
 	Invert bool
 	Flipx  bool
 	Flipy  bool
+}
+
+func init() {
+	image.RegisterFormat("ico", "\x00\x00\x01\x00?????\x00", ico.Decode, ico.DecodeConfig)
 }
 
 func Encode(w io.Writer, m image.Image, c ...Config) error {
