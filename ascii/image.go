@@ -15,7 +15,7 @@ import (
 	_ "image/png"
 
 	"github.com/nfnt/resize"
-	"github.com/zyxar/goico"
+	"github.com/zyxar/image2ascii/ico"
 )
 
 type Image struct {
