@@ -23,3 +23,5 @@ _testmain.go
 *.test
 *.prof
 image2ascii
+ico/testdata/
+ico/testdata

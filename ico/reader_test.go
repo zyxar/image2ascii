@@ -15,8 +15,7 @@ func TestDecodeAll(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)
 	files, _ := filepath.Glob("testdata/favicons/*.ico")
-	for i, f := range files {
-		fmt.Println(i, "WORKING WITH", f)
+	for _, f := range files {
 		icoData, err := ioutil.ReadFile(f)
 		assert.NoError(err, f)
 
