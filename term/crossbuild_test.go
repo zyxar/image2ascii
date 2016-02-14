@@ -1,4 +1,4 @@
-package main
+package term_test
 
 import (
 	"os"
@@ -15,10 +15,11 @@ const (
 var OSs = []string{"darwin", "dragonfly", "freebsd", "linux", "netbsd", "openbsd", "windows"}
 
 func build(goos string) error {
-	cmd := exec.Command("go", "build", "-o", "image2ascii."+goos)
+	cmd := exec.Command("go", "build")
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, "GOOS="+goos)
 	cmd.Env = append(cmd.Env, _GOARCH)
+	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
 
@@ -28,6 +29,5 @@ func TestCrossBuild(t *testing.T) {
 	for i, _ := range OSs {
 		err := build(OSs[i])
 		ast.NoError(err, OSs[i])
-		os.Remove("image2ascii." + OSs[i]) // cleanup
 	}
 }

@@ -1,6 +1,6 @@
 //+build windows
 
-package ascii
+package term
 
 // credit: https://github.com/nsf/termbox-go/blob/master/termbox_windows.go
 import (
@@ -45,7 +45,7 @@ func get_console_screen_buffer_info(h syscall.Handle, info *console_screen_buffe
 	return
 }
 
-func termWidth(fd uintptr) int {
+func Width(fd uintptr) int {
 	if err := get_console_screen_buffer_info(syscall.Handle(fd), &consoleInfo); err != nil {
 		panic(err)
 	}

@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/nfnt/resize"
+	"github.com/zyxar/image2ascii/term"
 
 	_ "github.com/zyxar/image2ascii/ico"
 	_ "golang.org/x/image/bmp"
@@ -54,7 +55,7 @@ func decode(m image.Image, c ...Config) (i *Image, err error) {
 	}
 
 	if conf.Width <= 0 && conf.Height <= 0 {
-		conf.Width = termWidth(os.Stdout.Fd())
+		conf.Width = term.Width(os.Stdout.Fd())
 		conf.Height = round(0.5 * float64(conf.Width) * float64(m.Bounds().Dy()) / float64(m.Bounds().Dx()))
 	} else if conf.Height <= 0 {
 		conf.Height = round(0.5 * float64(conf.Width) * float64(m.Bounds().Dy()) / float64(m.Bounds().Dx()))

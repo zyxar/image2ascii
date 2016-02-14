@@ -1,13 +1,13 @@
 //+build darwin dragonfly freebsd linux netbsd openbsd
 
-package ascii
+package term
 
 import (
 	"syscall"
 	"unsafe"
 )
 
-func termWidth(fd uintptr) int {
+func Width(fd uintptr) int {
 	var sz struct {
 		rows    uint16
 		cols    uint16
