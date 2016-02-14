@@ -12,6 +12,7 @@ install:
 script:
 - image2ascii -i -c testdata/sqrk.jpg
 - go test ./ico
+- go test .
 notifications:
   slack:
     secure: bOje/mTZWvL3E309AB8HzJcBctTrcuJQzwzkCZOLGZriH31xK8c/us+v+F5RGXoaj7Pw47ZBGagRAFSSYLeIr+BaxvElHnolJlytxr1IMY3r8Rw1OhYyOOYyFR0HvD9DPBKK7OiBJHWO0viEQLRl772N5Uf43PJry/BBArPiHPE=
