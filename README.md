@@ -1,8 +1,11 @@
 # Image to ASCII
 [![GoDoc][1]][2]
+[![Build Status][3]][4]
 
 [1]: https://godoc.org/github.com/zyxar/image2ascii/ascii?status.svg
 [2]: https://godoc.org/github.com/zyxar/image2ascii/ascii
+[3]: https://travis-ci.org/zyxar/image2ascii.png?branch=master
+[4]: https://travis-ci.org/zyxar/image2ascii
 
 inspired by jp2a
 
