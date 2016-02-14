@@ -20,6 +20,7 @@ inspired by jp2a
 - `gif`
 - `bmp`
 - `tiff`
+- `ico`
 - `vp8l`
 - `webp`
 
@@ -40,9 +41,13 @@ Usage: image2ascii [options] {IMAGE FILE}
 ## Package
 
 ```godoc
-package image
-    import "github.com/zyxar/image2ascii/image"
+package ascii
+    import "github.com/zyxar/image2ascii/ascii"
 
+
+FUNCTIONS
+
+func Encode(w io.Writer, m image.Image, c ...Config) error
 
 TYPES
 
@@ -62,6 +67,20 @@ type Image struct {
 func Decode(r io.Reader, c ...Config) (i *Image, err error)
 
 func (i Image) WriteTo(w io.Writer) (n int64, err error)
+```
+
+```godoc
+package ico
+    import "github.com/zyxar/image2ascii/ico"
+
+
+FUNCTIONS
+
+func Decode(r io.Reader) (image.Image, error)
+
+func DecodeAll(r io.Reader) ([]image.Image, error)
+
+func DecodeConfig(r io.Reader) (image.Config, error)
 ```
 
 ## Alternative
