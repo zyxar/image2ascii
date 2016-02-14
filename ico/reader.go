@@ -97,9 +97,25 @@ func (d *decoder) decode(r io.Reader) (err error) {
 	}
 	d.images = make([]image.Image, d.head.Number)
 	for i, _ := range d.entries {
-		d.images[i], err = d.decodeImage(d.entries[i].Size)
-		if err != nil {
+		data := make([]byte, d.entries[i].Size+14)
+		n, err := io.ReadFull(d.r, data[14:])
+		if err != nil && err != io.ErrUnexpectedEOF {
 			return err
+		}
+		data = data[:14+n]
+		// Check if the image is a PNG by the first 8 bytes of the image data
+		if string(data[14:14+len(pngHeader)]) == pngHeader {
+			if d.images[i], err = png.Decode(bytes.NewReader(data[14:])); err != nil {
+				return err
+			}
+		} else {
+			// Decode as BMP instead
+			if err = d.forgeBMPHead(data); err != nil {
+				return err
+			}
+			if d.images[i], err = bmp.Decode(bytes.NewReader(data)); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -122,24 +138,6 @@ func (d *decoder) decodeEntries() error {
 		}
 	}
 	return nil
-}
-
-func (d *decoder) decodeImage(size uint32) (image.Image, error) {
-	data := make([]byte, size+14)
-	n, err := io.ReadFull(d.r, data[14:])
-	if err != nil && err != io.ErrUnexpectedEOF {
-		return nil, err
-	}
-	data = data[:14+n]
-	// Check if the image is a PNG by the first 8 bytes of the image data
-	if string(data[14:14+len(pngHeader)]) == pngHeader {
-		return png.Decode(bytes.NewReader(data[14:]))
-	}
-	// Decode as BMP instead
-	if err = d.forgeBMPHead(data); err != nil {
-		return nil, err
-	}
-	return bmp.Decode(bytes.NewReader(data))
 }
 
 func (d *decoder) forgeBMPHead(buf []byte) error {
