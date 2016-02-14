@@ -11,6 +11,10 @@ import (
 	bmp "github.com/jsummers/gobmp"
 )
 
+func init() {
+	image.RegisterFormat("ico", "\x00\x00\x01\x00?????\x00", Decode, DecodeConfig)
+}
+
 // ---- public ----
 
 func Decode(r io.Reader) (image.Image, error) {

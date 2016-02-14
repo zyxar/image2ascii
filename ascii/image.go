@@ -6,6 +6,9 @@ import (
 	"io"
 	"os"
 
+	"github.com/nfnt/resize"
+
+	_ "github.com/zyxar/image2ascii/ico"
 	_ "golang.org/x/image/bmp"
 	_ "golang.org/x/image/tiff"
 	_ "golang.org/x/image/vp8l"
@@ -13,9 +16,6 @@ import (
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
-
-	"github.com/nfnt/resize"
-	"github.com/zyxar/image2ascii/ico"
 )
 
 type Image struct {
@@ -30,10 +30,6 @@ type Config struct {
 	Invert bool
 	Flipx  bool
 	Flipy  bool
-}
-
-func init() {
-	image.RegisterFormat("ico", "\x00\x00\x01\x00?????\x00", ico.Decode, ico.DecodeConfig)
 }
 
 func Encode(w io.Writer, m image.Image, c ...Config) error {
