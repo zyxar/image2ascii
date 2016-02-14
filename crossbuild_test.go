@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"testing"
@@ -13,6 +11,8 @@ import (
 const (
 	_GOARCH = "GOARCH=amd64"
 )
+
+var OSs = []string{"darwin", "dragonfly", "freebsd", "linux", "netbsd", "openbsd", "windows"}
 
 func build(goos string) error {
 	cmd := exec.Command("go", "build", "-o", "image2ascii."+goos)
@@ -25,21 +25,9 @@ func build(goos string) error {
 func TestCrossBuild(t *testing.T) {
 	t.Parallel()
 	ast := assert.New(t)
-	buf, err := ioutil.ReadFile("ascii/term.go")
-	ast.NoError(err)
-	n := bytes.IndexByte(buf, '\n')
-	if n == -1 || n <= 9 {
-		t.Fatal("invalid content of term.go")
-	}
-	buf = buf[9:n]
-	ss := bytes.Split(buf, []byte{' '})
-	for i, _ := range ss {
-		goos := string(ss[i])
-		err = build(goos)
-		ast.NoError(err, goos)
-		if err != nil {
-			println(err.Error())
-		}
-		os.Remove("image2ascii." + goos) // cleanup
+	for i, _ := range OSs {
+		err := build(OSs[i])
+		ast.NoError(err, OSs[i])
+		os.Remove("image2ascii." + OSs[i]) // cleanup
 	}
 }
