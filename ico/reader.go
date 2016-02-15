@@ -54,7 +54,7 @@ func DecodeConfig(r io.Reader) (image.Config, error) {
 		return cfg, err
 	}
 	buf = buf[:14+n]
-	if string(buf[14:14+len(pngHeader)]) == pngHeader {
+	if n > 8 && bytes.Compare(buf[14:22], pngHeader) == 0 {
 		return png.DecodeConfig(bytes.NewReader(buf[14:]))
 	}
 
@@ -64,7 +64,7 @@ func DecodeConfig(r io.Reader) (image.Config, error) {
 
 // ---- private ----
 
-type entry struct {
+type direntry struct {
 	Width   byte
 	Height  byte
 	Palette byte
@@ -83,9 +83,8 @@ type head struct {
 
 type decoder struct {
 	head    head
-	entries []entry
+	entries []direntry
 	images  []image.Image
-	cfg     image.Config
 }
 
 func (d *decoder) decode(r io.Reader) (err error) {
@@ -97,21 +96,20 @@ func (d *decoder) decode(r io.Reader) (err error) {
 	}
 	d.images = make([]image.Image, d.head.Number)
 	for i, _ := range d.entries {
-		data := make([]byte, d.entries[i].Size+14)
+		e := &(d.entries[i])
+		data := make([]byte, e.Size+14)
 		n, err := io.ReadFull(r, data[14:])
 		if err != nil && err != io.ErrUnexpectedEOF {
 			return err
 		}
 		data = data[:14+n]
-		// Check if the image is a PNG by the first 8 bytes of the image data
-		if string(data[14:14+len(pngHeader)]) == pngHeader {
+		if n > 8 && bytes.Compare(data[14:22], pngHeader) == 0 { // decode as PNG
 			if d.images[i], err = png.Decode(bytes.NewReader(data[14:])); err != nil {
 				return err
 			}
-		} else {
-			// Decode as BMP instead
-			maskData := d.forgeBMPHead(data, &(d.entries[i]))
-			if maskData != nil && len(maskData) < 14+n {
+		} else { // decode as BMP
+			maskData := d.forgeBMPHead(data, e)
+			if maskData != nil {
 				data = data[:n+14-len(maskData)]
 			}
 			if d.images[i], err = bmp.Decode(bytes.NewReader(data)); err != nil {
@@ -120,17 +118,17 @@ func (d *decoder) decode(r io.Reader) (err error) {
 			bounds := d.images[i].Bounds()
 			mask := image.NewAlpha(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
 			masked := image.NewNRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
-			for row := 0; row < int(d.entries[i].Height); row++ {
-				for col := 0; col < int(d.entries[i].Width); col++ {
+			for row := 0; row < int(e.Height); row++ {
+				for col := 0; col < int(e.Width); col++ {
 					if maskData != nil {
-						rowSize := (int(d.entries[i].Width) + 31) / 32 * 4
+						rowSize := (int(e.Width) + 31) / 32 * 4
 						if (maskData[row*rowSize+col/8]>>(7-uint(col)%8))&0x01 != 1 {
-							mask.SetAlpha(col, int(d.entries[i].Height)-row-1, color.Alpha{255})
+							mask.SetAlpha(col, int(e.Height)-row-1, color.Alpha{255})
 						}
-					} else {
-						rowSize := (int(d.entries[i].Width)*32 + 31) / 32 * 4
+					} else { // 32-Bit
+						rowSize := (int(e.Width)*32 + 31) / 32 * 4
 						offset := int(binary.LittleEndian.Uint32(data[10:14]))
-						mask.SetAlpha(col, int(d.entries[i].Height)-row-1, color.Alpha{data[offset+row*rowSize+col*4+3]})
+						mask.SetAlpha(col, int(e.Height)-row-1, color.Alpha{data[offset+row*rowSize+col*4+3]})
 					}
 				}
 			}
@@ -151,7 +149,7 @@ func (d *decoder) decodeHeader(r io.Reader) error {
 
 func (d *decoder) decodeEntries(r io.Reader) error {
 	n := int(d.head.Number)
-	d.entries = make([]entry, n)
+	d.entries = make([]direntry, n)
 	for i := 0; i < n; i++ {
 		if err := binary.Read(r, binary.LittleEndian, &(d.entries[i])); err != nil {
 			return err
@@ -160,18 +158,20 @@ func (d *decoder) decodeEntries(r io.Reader) error {
 	return nil
 }
 
-func (d *decoder) forgeBMPHead(buf []byte, e *entry) (mask []byte) {
-	// See wikipedia en.wikipedia.org/wiki/BMP_file_format
+func (d *decoder) forgeBMPHead(buf []byte, e *direntry) (mask []byte) {
+	// See en.wikipedia.org/wiki/BMP_file_format
 	data := buf[14:]
-	copy(buf[0:2], "\x42\x4D") // Magic number
-
 	imageSize := len(data)
 	if e.Bits != 32 {
 		maskSize := (int(e.Width) + 31) / 32 * 4 * int(e.Height)
 		imageSize -= maskSize
+		if imageSize <= 0 {
+			return
+		}
 		mask = data[imageSize:]
 	}
 
+	copy(buf[0:2], "\x42\x4D") // Magic number
 	dibSize := binary.LittleEndian.Uint32(data[:4])
 	w := binary.LittleEndian.Uint32(data[4:8])
 	h := binary.LittleEndian.Uint32(data[8:12])
@@ -179,8 +179,7 @@ func (d *decoder) forgeBMPHead(buf []byte, e *entry) (mask []byte) {
 		binary.LittleEndian.PutUint32(data[8:12], h/2)
 	}
 
-	// File size
-	binary.LittleEndian.PutUint32(buf[2:6], uint32(imageSize))
+	binary.LittleEndian.PutUint32(buf[2:6], uint32(imageSize)) // File size
 
 	// Calculate offset into image data
 	numColors := binary.LittleEndian.Uint32(data[32:36])
@@ -204,11 +203,11 @@ func (d *decoder) forgeBMPHead(buf []byte, e *entry) (mask []byte) {
 		numColorsSize = numColors * 4
 	}
 	offset := 14 + dibSize + numColorsSize
-	if dibSize > 40 {
+	if dibSize > 40 && int(dibSize-4) <= len(data) {
 		offset += binary.LittleEndian.Uint32(data[dibSize-8 : dibSize-4])
 	}
 	binary.LittleEndian.PutUint32(buf[10:14], offset)
 	return
 }
 
-const pngHeader = "\x89PNG\r\n\x1a\n"
+var pngHeader = []byte{'\x89', 'P', 'N', 'G', '\r', '\n', '\x1a', '\n'}
