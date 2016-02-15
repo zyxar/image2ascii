@@ -36,18 +36,20 @@ func DecodeAll(r io.Reader) ([]image.Image, error) {
 }
 
 func DecodeConfig(r io.Reader) (image.Config, error) {
-	d := decoder{r: r}
-	var cfg image.Config
-	var err error
-	if err = d.decodeHeader(); err != nil {
+	var (
+		d   decoder
+		cfg image.Config
+		err error
+	)
+	if err = d.decodeHeader(r); err != nil {
 		return cfg, err
 	}
-	if err = d.decodeEntries(); err != nil {
+	if err = d.decodeEntries(r); err != nil {
 		return cfg, err
 	}
 	e := d.entries[0]
 	buf := make([]byte, e.Size+14)
-	n, err := io.ReadFull(d.r, buf[14:])
+	n, err := io.ReadFull(r, buf[14:])
 	if err != nil && err != io.ErrUnexpectedEOF {
 		return cfg, err
 	}
@@ -80,7 +82,6 @@ type head struct {
 }
 
 type decoder struct {
-	r       io.Reader
 	head    head
 	entries []entry
 	images  []image.Image
@@ -88,17 +89,16 @@ type decoder struct {
 }
 
 func (d *decoder) decode(r io.Reader) (err error) {
-	d.r = r
-	if err = d.decodeHeader(); err != nil {
+	if err = d.decodeHeader(r); err != nil {
 		return err
 	}
-	if err = d.decodeEntries(); err != nil {
+	if err = d.decodeEntries(r); err != nil {
 		return err
 	}
 	d.images = make([]image.Image, d.head.Number)
 	for i, _ := range d.entries {
 		data := make([]byte, d.entries[i].Size+14)
-		n, err := io.ReadFull(d.r, data[14:])
+		n, err := io.ReadFull(r, data[14:])
 		if err != nil && err != io.ErrUnexpectedEOF {
 			return err
 		}
@@ -141,19 +141,19 @@ func (d *decoder) decode(r io.Reader) (err error) {
 	return nil
 }
 
-func (d *decoder) decodeHeader() error {
-	binary.Read(d.r, binary.LittleEndian, &(d.head))
+func (d *decoder) decodeHeader(r io.Reader) error {
+	binary.Read(r, binary.LittleEndian, &(d.head))
 	if d.head.Zero != 0 || d.head.Type != 1 {
 		return fmt.Errorf("corrupted head: [%x,%x]", d.head.Zero, d.head.Type)
 	}
 	return nil
 }
 
-func (d *decoder) decodeEntries() error {
+func (d *decoder) decodeEntries(r io.Reader) error {
 	n := int(d.head.Number)
 	d.entries = make([]entry, n)
 	for i := 0; i < n; i++ {
-		if err := binary.Read(d.r, binary.LittleEndian, &(d.entries[i])); err != nil {
+		if err := binary.Read(r, binary.LittleEndian, &(d.entries[i])); err != nil {
 			return err
 		}
 	}
