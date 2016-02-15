@@ -19,7 +19,7 @@ import (
 	_ "image/png"
 )
 
-type Image struct {
+type Ascii struct {
 	image  image.Image
 	config Config
 }
@@ -42,7 +42,7 @@ func Encode(w io.Writer, m image.Image, c ...Config) error {
 	return err
 }
 
-func decode(m image.Image, c ...Config) (i *Image, err error) {
+func decode(m image.Image, c ...Config) (a *Ascii, err error) {
 	var conf Config
 	if c != nil {
 		conf = c[0]
@@ -64,39 +64,39 @@ func decode(m image.Image, c ...Config) (i *Image, err error) {
 	}
 
 	img := resize.Resize(uint(conf.Width), uint(conf.Height), m, resize.Lanczos3)
-	i = &Image{img, conf}
+	a = &Ascii{img, conf}
 	return
 }
 
-func Decode(r io.Reader, c ...Config) (i *Image, err error) {
+func Decode(r io.Reader, c ...Config) (a *Ascii, err error) {
 	var im image.Image
 	if im, _, err = image.Decode(r); err != nil {
 		return
 	}
-	i, err = decode(im, c...)
+	a, err = decode(im, c...)
 	return
 }
 
-func (i Image) WriteTo(w io.Writer) (n int64, err error) {
-	ly := i.config.Height
-	lx := i.config.Width
+func (this Ascii) WriteTo(w io.Writer) (n int64, err error) {
+	ly := this.config.Height
+	lx := this.config.Width
 	m := 0
 	for y := 0; y < ly; y++ {
 		for x := 0; x < lx; x++ {
 			posX := x
 			posY := y
-			if i.config.Flipx {
+			if this.config.Flipx {
 				posX = lx - 1 - x
 			}
-			if i.config.Flipy {
+			if this.config.Flipy {
 				posY = ly - 1 - y
 			}
-			r, g, b, _ := i.image.At(posX, posY).RGBA()
+			r, g, b, _ := this.image.At(posX, posY).RGBA()
 			v := round(float32(r+g+b) * float32(ascii_palette_length) / 65535 / 3)
-			if i.config.Invert {
+			if this.config.Invert {
 				v = ascii_palette_length - v
 			}
-			if i.config.Color {
+			if this.config.Color {
 				vr := float32(r) / 65535
 				vg := float32(g) / 65535
 				vb := float32(b) / 65535
@@ -143,7 +143,7 @@ func (i Image) WriteTo(w io.Writer) (n int64, err error) {
 				return
 			}
 			n += int64(m)
-			if i.config.Color {
+			if this.config.Color {
 				m, err = fmt.Fprintf(w, "%s", colorReset)
 				if err != nil {
 					return
