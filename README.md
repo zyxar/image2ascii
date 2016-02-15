@@ -7,22 +7,26 @@
 [3]: https://travis-ci.org/zyxar/image2ascii.png?branch=master
 [4]: https://travis-ci.org/zyxar/image2ascii
 
-inspired by jp2a
+inspired by [jp2a](http://csl.sublevel3.org/jp2a/)
 
 ## Install
 
-`go get github.com/zyxar/image2ascii/...`
+`go get github.com/zyxar/image2ascii`
 
-## Supported Format
+## Supported [Formats](https://en.wikipedia.org/wiki/Image_file_formats)
 
-- `jpeg`
-- `png`
-- `gif`
-- `bmp`
-- `tiff`
-- `ico`
-- `vp8l`
-- `webp`
+- [x] `jpeg`
+- [x] `png`
+- [x] `gif`
+- [x] `bmp`
+- [x] `tiff`
+- [x] `ico`
+- [x] `vp8l`
+- [x] `webp`
+- [ ] [`exif`](https://en.wikipedia.org/wiki/Exchangeable_image_file_format)
+- [ ] [`bgp`](https://en.wikipedia.org/wiki/Better_Portable_Graphics)
+- [ ] [`svg`](https://en.wikipedia.org/wiki/Scalable_Vector_Graphics)
+
 
 ## Cmd
 
@@ -51,6 +55,14 @@ func Encode(w io.Writer, m image.Image, c ...Config) error
 
 TYPES
 
+type Ascii struct {
+    // contains filtered or unexported fields
+}
+
+func Decode(r io.Reader, c ...Config) (a *Ascii, err error)
+
+func (this Ascii) WriteTo(w io.Writer) (n int64, err error)
+
 type Config struct {
     Width  int
     Height int
@@ -59,14 +71,6 @@ type Config struct {
     Flipx  bool
     Flipy  bool
 }
-
-type Image struct {
-    // contains filtered or unexported fields
-}
-
-func Decode(r io.Reader, c ...Config) (i *Image, err error)
-
-func (i Image) WriteTo(w io.Writer) (n int64, err error)
 ```
 
 ```godoc
@@ -81,6 +85,16 @@ func Decode(r io.Reader) (image.Image, error)
 func DecodeAll(r io.Reader) ([]image.Image, error)
 
 func DecodeConfig(r io.Reader) (image.Config, error)
+```
+
+```godoc
+package term
+    import "github.com/zyxar/image2ascii/term"
+
+
+FUNCTIONS
+
+func Width(fd uintptr) int
 ```
 
 ## Alternative
