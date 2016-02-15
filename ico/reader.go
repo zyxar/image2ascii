@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"image"
+	"image/color"
+	"image/draw"
 	"image/png"
 	"io"
 
@@ -54,9 +56,7 @@ func DecodeConfig(r io.Reader) (image.Config, error) {
 		return png.DecodeConfig(bytes.NewReader(buf[14:]))
 	}
 
-	if err = d.forgeBMPHead(buf); err != nil {
-		return cfg, err
-	}
+	d.forgeBMPHead(buf, &e)
 	return bmp.DecodeConfig(bytes.NewReader(buf))
 }
 
@@ -110,12 +110,32 @@ func (d *decoder) decode(r io.Reader) (err error) {
 			}
 		} else {
 			// Decode as BMP instead
-			if err = d.forgeBMPHead(data); err != nil {
-				return err
+			maskData := d.forgeBMPHead(data, &(d.entries[i]))
+			if maskData != nil && len(maskData) < 14+n {
+				data = data[:n+14-len(maskData)]
 			}
 			if d.images[i], err = bmp.Decode(bytes.NewReader(data)); err != nil {
 				return err
 			}
+			bounds := d.images[i].Bounds()
+			mask := image.NewAlpha(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
+			masked := image.NewNRGBA(image.Rect(0, 0, bounds.Dx(), bounds.Dy()))
+			for row := 0; row < int(d.entries[i].Height); row++ {
+				for col := 0; col < int(d.entries[i].Width); col++ {
+					if maskData != nil {
+						rowSize := (int(d.entries[i].Width) + 31) / 32 * 4
+						if (maskData[row*rowSize+col/8]>>(7-uint(col)%8))&0x01 != 1 {
+							mask.SetAlpha(col, int(d.entries[i].Height)-row-1, color.Alpha{255})
+						}
+					} else {
+						rowSize := (int(d.entries[i].Width)*32 + 31) / 32 * 4
+						offset := int(binary.LittleEndian.Uint32(data[10:14]))
+						mask.SetAlpha(col, int(d.entries[i].Height)-row-1, color.Alpha{data[offset+row*rowSize+col*4+3]})
+					}
+				}
+			}
+			draw.DrawMask(masked, masked.Bounds(), d.images[i], bounds.Min, mask, bounds.Min, draw.Src)
+			d.images[i] = masked
 		}
 	}
 	return nil
@@ -140,11 +160,17 @@ func (d *decoder) decodeEntries() error {
 	return nil
 }
 
-func (d *decoder) forgeBMPHead(buf []byte) error {
-	// calculate image sizes
+func (d *decoder) forgeBMPHead(buf []byte, e *entry) (mask []byte) {
 	// See wikipedia en.wikipedia.org/wiki/BMP_file_format
 	data := buf[14:]
 	copy(buf[0:2], "\x42\x4D") // Magic number
+
+	imageSize := len(data)
+	if e.Bits != 32 {
+		maskSize := (int(e.Width) + 31) / 32 * 4 * int(e.Height)
+		imageSize -= maskSize
+		mask = data[imageSize:]
+	}
 
 	dibSize := binary.LittleEndian.Uint32(data[:4])
 	w := binary.LittleEndian.Uint32(data[4:8])
@@ -154,7 +180,7 @@ func (d *decoder) forgeBMPHead(buf []byte) error {
 	}
 
 	// File size
-	binary.LittleEndian.PutUint32(buf[2:6], uint32(len(data)))
+	binary.LittleEndian.PutUint32(buf[2:6], uint32(imageSize))
 
 	// Calculate offset into image data
 	numColors := binary.LittleEndian.Uint32(data[32:36])
@@ -182,7 +208,7 @@ func (d *decoder) forgeBMPHead(buf []byte) error {
 		offset += binary.LittleEndian.Uint32(data[dibSize-8 : dibSize-4])
 	}
 	binary.LittleEndian.PutUint32(buf[10:14], offset)
-	return nil
+	return
 }
 
 const pngHeader = "\x89PNG\r\n\x1a\n"
