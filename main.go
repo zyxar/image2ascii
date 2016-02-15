@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	. "github.com/zyxar/image2ascii/ascii"
+	"github.com/zyxar/image2ascii/ascii"
 )
 
 var (
@@ -26,24 +26,25 @@ func main() {
 	}
 	r, err := os.Open(flag.Arg(0))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
+		fmt.Fprintln(os.Stderr, err)
 		return
 	}
 	defer r.Close()
-	conf := Config{
+	conf := ascii.Config{
 		Width:  *width,
 		Height: *height,
 		Color:  *color,
 		Invert: *invert,
 		Flipx:  *flipx,
 		Flipy:  *flipy}
-	i, err := Decode(r, conf)
+
+	a, err := ascii.Decode(r, conf)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
+		fmt.Fprintln(os.Stderr, err)
 		return
 	}
 
-	if _, err = i.WriteTo(os.Stdout); err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
+	if _, err = a.WriteTo(os.Stdout); err != nil {
+		fmt.Fprintln(os.Stderr, err)
 	}
 }
