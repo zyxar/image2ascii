@@ -30,7 +30,7 @@ func main() {
 		return
 	}
 	defer r.Close()
-	conf := ascii.Config{
+	opt := ascii.Options{
 		Width:  *width,
 		Height: *height,
 		Color:  *color,
@@ -38,7 +38,7 @@ func main() {
 		Flipx:  *flipx,
 		Flipy:  *flipy}
 
-	a, err := ascii.Decode(r, conf)
+	a, err := ascii.Decode(r, opt)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return

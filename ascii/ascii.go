@@ -20,11 +20,11 @@ import (
 )
 
 type Ascii struct {
-	image  image.Image
-	config Config
+	img image.Image
+	opt Options
 }
 
-type Config struct {
+type Options struct {
 	Width  int
 	Height int
 	Color  bool
@@ -33,8 +33,8 @@ type Config struct {
 	Flipy  bool
 }
 
-func Encode(w io.Writer, m image.Image, c ...Config) error {
-	img, err := decode(m, c...)
+func Encode(w io.Writer, m image.Image, o ...Options) error {
+	img, err := decode(m, o...)
 	if err != nil {
 		return err
 	}
@@ -42,61 +42,61 @@ func Encode(w io.Writer, m image.Image, c ...Config) error {
 	return err
 }
 
-func decode(m image.Image, c ...Config) (a *Ascii, err error) {
-	var conf Config
-	if c != nil {
-		conf = c[0]
+func decode(m image.Image, o ...Options) (a *Ascii, err error) {
+	var opt Options
+	if o != nil {
+		opt = o[0]
 	} else {
-		conf = Config{
+		opt = Options{
 			Color:  false,
 			Invert: false,
 			Flipx:  false,
 			Flipy:  false}
 	}
 
-	if conf.Width <= 0 && conf.Height <= 0 {
-		conf.Width = term.Width(os.Stdout.Fd())
-		conf.Height = round(0.5 * float64(conf.Width) * float64(m.Bounds().Dy()) / float64(m.Bounds().Dx()))
-	} else if conf.Height <= 0 {
-		conf.Height = round(0.5 * float64(conf.Width) * float64(m.Bounds().Dy()) / float64(m.Bounds().Dx()))
-	} else if conf.Width <= 0 {
-		conf.Width = round(2 * float64(conf.Height) * float64(m.Bounds().Dx()) / float64(m.Bounds().Dy()))
+	if opt.Width <= 0 && opt.Height <= 0 {
+		opt.Width = term.Width(os.Stdout.Fd())
+		opt.Height = round(0.5 * float64(opt.Width) * float64(m.Bounds().Dy()) / float64(m.Bounds().Dx()))
+	} else if opt.Height <= 0 {
+		opt.Height = round(0.5 * float64(opt.Width) * float64(m.Bounds().Dy()) / float64(m.Bounds().Dx()))
+	} else if opt.Width <= 0 {
+		opt.Width = round(2 * float64(opt.Height) * float64(m.Bounds().Dx()) / float64(m.Bounds().Dy()))
 	}
 
-	img := resize.Resize(uint(conf.Width), uint(conf.Height), m, resize.Lanczos3)
-	a = &Ascii{img, conf}
+	img := resize.Resize(uint(opt.Width), uint(opt.Height), m, resize.Lanczos3)
+	a = &Ascii{img, opt}
 	return
 }
 
-func Decode(r io.Reader, c ...Config) (a *Ascii, err error) {
-	var im image.Image
-	if im, _, err = image.Decode(r); err != nil {
+func Decode(r io.Reader, o ...Options) (a *Ascii, err error) {
+	var img image.Image
+	if img, _, err = image.Decode(r); err != nil {
 		return
 	}
-	a, err = decode(im, c...)
+	a, err = decode(img, o...)
 	return
 }
 
 func (this Ascii) WriteTo(w io.Writer) (n int64, err error) {
-	ly := this.config.Height
-	lx := this.config.Width
+	ly := this.opt.Height
+	lx := this.opt.Width
 	m := 0
 	for y := 0; y < ly; y++ {
 		for x := 0; x < lx; x++ {
 			posX := x
 			posY := y
-			if this.config.Flipx {
+			if this.opt.Flipx {
 				posX = lx - 1 - x
 			}
-			if this.config.Flipy {
+			if this.opt.Flipy {
 				posY = ly - 1 - y
 			}
-			r, g, b, _ := this.image.At(posX, posY).RGBA()
+			r, g, b, _ := this.img.At(posX, posY).RGBA()
 			v := round(float64(r+g+b) * float64(ascii_palette_length) / 65535 / 3)
-			if this.config.Invert {
+			if this.opt.Invert {
 				v = ascii_palette_length - v
 			}
-			if this.config.Color {
+			if this.opt.Color {
 				vr := float64(r) / 65535
 				vg := float64(g) / 65535
 				vb := float64(b) / 65535
@@ -143,7 +143,7 @@ func (this Ascii) WriteTo(w io.Writer) (n int64, err error) {
 				return
 			}
 			n += int64(m)
-			if this.config.Color {
+			if this.opt.Color {
 				m, err = fmt.Fprintf(w, "%s", colorReset)
 				if err != nil {
 					return
