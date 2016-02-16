@@ -56,11 +56,11 @@ func decode(m image.Image, c ...Config) (a *Ascii, err error) {
 
 	if conf.Width <= 0 && conf.Height <= 0 {
 		conf.Width = term.Width(os.Stdout.Fd())
-		conf.Height = round(0.5 * float32(conf.Width) * float32(m.Bounds().Dy()) / float32(m.Bounds().Dx()))
+		conf.Height = round(0.5 * float64(conf.Width) * float64(m.Bounds().Dy()) / float64(m.Bounds().Dx()))
 	} else if conf.Height <= 0 {
-		conf.Height = round(0.5 * float32(conf.Width) * float32(m.Bounds().Dy()) / float32(m.Bounds().Dx()))
+		conf.Height = round(0.5 * float64(conf.Width) * float64(m.Bounds().Dy()) / float64(m.Bounds().Dx()))
 	} else if conf.Width <= 0 {
-		conf.Width = round(2 * float32(conf.Height) * float32(m.Bounds().Dx()) / float32(m.Bounds().Dy()))
+		conf.Width = round(2 * float64(conf.Height) * float64(m.Bounds().Dx()) / float64(m.Bounds().Dy()))
 	}
 
 	img := resize.Resize(uint(conf.Width), uint(conf.Height), m, resize.Lanczos3)
@@ -92,14 +92,14 @@ func (this Ascii) WriteTo(w io.Writer) (n int64, err error) {
 				posY = ly - 1 - y
 			}
 			r, g, b, _ := this.image.At(posX, posY).RGBA()
-			v := round(float32(r+g+b) * float32(ascii_palette_length) / 65535 / 3)
+			v := round(float64(r+g+b) * float64(ascii_palette_length) / 65535 / 3)
 			if this.config.Invert {
 				v = ascii_palette_length - v
 			}
 			if this.config.Color {
-				vr := float32(r) / 65535
-				vg := float32(g) / 65535
-				vb := float32(b) / 65535
+				vr := float64(r) / 65535
+				vg := float64(g) / 65535
+				vb := float64(b) / 65535
 				if vr-vg > threshold_low && vr-vb > threshold_low {
 					m, err = fmt.Fprintf(w, "%s", colorRed)
 					if err != nil {
@@ -160,6 +160,6 @@ func (this Ascii) WriteTo(w io.Writer) (n int64, err error) {
 	return
 }
 
-func round(f float32) int {
+func round(f float64) int {
 	return int(f + 0.5)
 }
