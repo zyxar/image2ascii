@@ -24,7 +24,7 @@ func Decode(r io.Reader) (image.Image, error) {
 	if err := d.decode(r); err != nil {
 		return nil, err
 	}
-	return d.images[d.head.Number-1], nil
+	return d.images[0], nil
 }
 
 func DecodeAll(r io.Reader) ([]image.Image, error) {
