@@ -25,7 +25,7 @@ func TestDecodeAll(t *testing.T) {
 			continue
 		}
 
-		for i, _ := range images {
+		for i := range images {
 			var dst string
 			if len(images) == 1 {
 				dst = f + ".jpg"

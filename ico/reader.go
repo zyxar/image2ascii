@@ -95,7 +95,7 @@ func (d *decoder) decode(r io.Reader) (err error) {
 		return err
 	}
 	d.images = make([]image.Image, d.head.Number)
-	for i, _ := range d.entries {
+	for i := range d.entries {
 		e := &(d.entries[i])
 		data := make([]byte, e.Size+14)
 		n, err := io.ReadFull(r, data[14:])

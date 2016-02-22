@@ -26,7 +26,7 @@ func build(goos string) error {
 func TestCrossBuild(t *testing.T) {
 	t.Parallel()
 	ast := assert.New(t)
-	for i, _ := range OSs {
+	for i := range OSs {
 		err := build(OSs[i])
 		ast.NoError(err, OSs[i])
 	}

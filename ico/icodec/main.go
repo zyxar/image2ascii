@@ -71,7 +71,7 @@ func convert(f string) (err error) {
 		return
 	}
 
-	for i, _ := range images {
+	for i := range images {
 		var dst string
 		if len(images) == 1 {
 			dst = fmt.Sprintf("%s.%s", filepath.Base(f), *format)
