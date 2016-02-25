@@ -1,12 +1,14 @@
 # Image to ASCII
 [![GoDoc][1]][2]
 [![Build Status][3]][4]
+[![Go Report Card][5]][6]
 
 [1]: https://godoc.org/github.com/zyxar/image2ascii?status.svg
 [2]: https://godoc.org/github.com/zyxar/image2ascii
 [3]: https://travis-ci.org/zyxar/image2ascii.png?branch=master
 [4]: https://travis-ci.org/zyxar/image2ascii
-
+[5]: https://goreportcard.com/badge/github.com/zyxar/image2ascii
+[6]: https://goreportcard.com/report/github.com/zyxar/image2ascii
 
 ```
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMX0kxdolll,;::ccccllox0XWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
@@ -61,9 +63,6 @@ inspired by [jp2a](http://csl.sublevel3.org/jp2a/)
 - [x] `ico`
 - [x] `vp8l`
 - [x] `webp`
-- [ ] [`exif`](https://en.wikipedia.org/wiki/Exchangeable_image_file_format)
-- [ ] [`bgp`](https://en.wikipedia.org/wiki/Better_Portable_Graphics)
-- [ ] [`svg`](https://en.wikipedia.org/wiki/Scalable_Vector_Graphics)
 
 
 ## Cmd
