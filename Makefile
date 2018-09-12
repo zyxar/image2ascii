@@ -18,7 +18,6 @@ linux: EXT=.elf
 linux: build
 
 darwin: export GOOS=darwin
-darwin: EXT=.mach
 darwin: build
 
 .PHONY: clean

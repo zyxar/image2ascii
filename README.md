@@ -5,7 +5,7 @@
 
 [1]: https://godoc.org/github.com/zyxar/image2ascii?status.svg
 [2]: https://godoc.org/github.com/zyxar/image2ascii
-[3]: https://travis-ci.org/zyxar/image2ascii.png?branch=master
+[3]: https://travis-ci.org/zyxar/image2ascii.svg?branch=master
 [4]: https://travis-ci.org/zyxar/image2ascii
 [5]: https://goreportcard.com/badge/github.com/zyxar/image2ascii
 [6]: https://goreportcard.com/report/github.com/zyxar/image2ascii
