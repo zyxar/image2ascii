@@ -25,3 +25,5 @@ _testmain.go
 image2ascii
 ico/testdata/
 ico/testdata
+*.mach
+*.elf
