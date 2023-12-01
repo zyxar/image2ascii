@@ -11,6 +11,17 @@ import (
 	"github.com/zyxar/image2ascii/ico"
 )
 
+func TestDecodeConfig(t *testing.T) {
+	t.Parallel()
+	assert := assert.New(t)
+	f := "../testdata/bad.ico"
+	rd, err := os.Open(f)
+	assert.NoError(err, f)
+	defer rd.Close()
+	_, err = ico.DecodeConfig(rd)
+	assert.NoError(err, f)
+}
+
 func TestDecodeAll(t *testing.T) {
 	t.Parallel()
 	assert := assert.New(t)

@@ -24,6 +24,9 @@ func Decode(r io.Reader) (image.Image, error) {
 	if err := d.decode(r); err != nil {
 		return nil, err
 	}
+	if d.head.Number == 0 {
+		return nil, nil
+	}
 	return d.images[0], nil
 }
 
@@ -46,6 +49,9 @@ func DecodeConfig(r io.Reader) (image.Config, error) {
 	}
 	if err = d.decodeEntries(r); err != nil {
 		return cfg, err
+	}
+	if d.head.Number == 0 {
+		return cfg, nil
 	}
 	e := d.entries[0]
 	buf := make([]byte, e.Size+14)
